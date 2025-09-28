@@ -29,8 +29,12 @@ def fetch_data(ticker):
         return df
     # Flatten MultiIndex columns if present
     if isinstance(df.columns, pd.MultiIndex):
-        df.columns = ['_'.join(col).strip() if col[1] else col[0] for col in df.columns]
+        df.columns = [col[0] if col[1]=='' else f"{col[0]}_{col[1]}" for col in df.columns]
+    # Ensure numeric
+    for col in ["Open","High","Low","Close","Volume"]:
+        df[col] = pd.to_numeric(df[col], errors='coerce')
     df.dropna(inplace=True)
+    df.index = pd.to_datetime(df.index)
     return df
 
 df = fetch_data(selected_ticker)
@@ -58,9 +62,11 @@ def generate_signals(df):
         prev_ema10 = df["EMA_10"].iloc[i-1]
         prev_ema20 = df["EMA_20"].iloc[i-1]
         rsi = df["RSI_14"].iloc[i]
-        
+
+        # Buy: EMA10 crosses above EMA20 and RSI < 70
         if ema10 > ema20 and prev_ema10 <= prev_ema20 and rsi < 70:
             signals.append("BUY")
+        # Sell: EMA10 crosses below EMA20 and RSI > 30
         elif ema10 < ema20 and prev_ema10 >= prev_ema20 and rsi > 30:
             signals.append("SELL")
         else:
@@ -91,13 +97,26 @@ fig.add_trace(go.Scatter(x=df.index, y=df["EMA_20"], mode='lines', name='EMA20')
 buy_signals = df[df["Signal"] == "BUY"]
 sell_signals = df[df["Signal"] == "SELL"]
 
-fig.add_trace(go.Scatter(x=buy_signals.index, y=buy_signals["Close"],
-                         mode='markers', name='BUY',
-                         marker=dict(color='green', size=10, symbol='triangle-up')))
-fig.add_trace(go.Scatter(x=sell_signals.index, y=sell_signals["Close"],
-                         mode='markers', name='SELL',
-                         marker=dict(color='red', size=10, symbol='triangle-down')))
+fig.add_trace(go.Scatter(
+    x=buy_signals.index,
+    y=buy_signals["Close"],
+    mode='markers',
+    name='BUY',
+    marker=dict(color='green', size=10, symbol='triangle-up')
+))
+fig.add_trace(go.Scatter(
+    x=sell_signals.index,
+    y=sell_signals["Close"],
+    mode='markers',
+    name='SELL',
+    marker=dict(color='red', size=10, symbol='triangle-down')
+))
 
-fig.update_layout(title=f"{selected_ticker} Price & Signals (5-min interval)",
-                  xaxis_title="Datetime", yaxis_title="Price")
+fig.update_layout(
+    title=f"{selected_ticker} Price & Signals (5-min interval)",
+    xaxis_title="Datetime",
+    yaxis_title="Price",
+    hovermode="x unified"
+)
+
 st.plotly_chart(fig, use_container_width=True)
