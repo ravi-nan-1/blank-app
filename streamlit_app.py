@@ -44,7 +44,7 @@ if df.empty:
     st.stop()
 
 # -----------------------------
-# Compute indicators with pandas-ta (direct assignment)
+# Compute indicators with pandas-ta
 # -----------------------------
 df["EMA_10"] = ta.ema(df["Close"], length=10)
 df["EMA_20"] = ta.ema(df["Close"], length=20)
@@ -52,7 +52,7 @@ df["RSI_14"] = ta.rsi(df["Close"], length=14)
 df["ATR_14"] = ta.atr(df["High"], df["Low"], df["Close"], length=14)
 
 # -----------------------------
-# Generate simple buy/sell signals
+# Generate buy/sell signals
 # -----------------------------
 def generate_signals(df):
     signals = []
@@ -63,15 +63,13 @@ def generate_signals(df):
         prev_ema20 = df["EMA_20"].iloc[i-1]
         rsi = df["RSI_14"].iloc[i]
 
-        # Buy: EMA10 crosses above EMA20 and RSI < 70
         if ema10 > ema20 and prev_ema10 <= prev_ema20 and rsi < 70:
             signals.append("BUY")
-        # Sell: EMA10 crosses below EMA20 and RSI > 30
         elif ema10 < ema20 and prev_ema10 >= prev_ema20 and rsi > 30:
             signals.append("SELL")
         else:
             signals.append("HOLD")
-    signals.insert(0, "HOLD")  # First row has no previous
+    signals.insert(0, "HOLD")
     df["Signal"] = signals
     return df
 
