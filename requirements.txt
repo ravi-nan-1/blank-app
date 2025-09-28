@@ -1,1 +1,10 @@
 streamlit
+yfinance
+pandas
+numpy
+pandas_ta
+scikit-learn
+tensorflow
+plotly
+streamlit-autorefresh
+joblib
