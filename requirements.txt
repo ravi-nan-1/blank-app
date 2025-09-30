@@ -8,4 +8,4 @@ tensorflow
 plotly
 streamlit-autorefresh
 joblib
-pandas-ta==0.4.57b0
+pandas-ta==0.4.71b0
